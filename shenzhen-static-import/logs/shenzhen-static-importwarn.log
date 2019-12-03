@@ -1,0 +1,4 @@
+ERROR|2019-12-03 15:25:28.379|[main]|com.zaxxer.hikari.HikariConfig.validate. 950|HikariPool-1 - jdbcUrl is required with driverClassName.
+ERROR|2019-12-03 15:26:28.154|[main]|com.zaxxer.hikari.HikariConfig.validate. 954|HikariPool-1 - dataSource or dataSourceClassName or jdbcUrl is required.
+ERROR|2019-12-03 15:34:37.641|[main]|com.zaxxer.hikari.HikariConfig.validate. 954|HikariPool-1 - dataSource or dataSourceClassName or jdbcUrl is required.
+WARN|2019-12-03 15:50:06.505|[main]|com.mchange.v2.log.slf4j.Slf4jMLog$Slf4jMLogger$WarnLogger.log. 220|Bad pool size config, min 3 > max 0. Using 0 as min.

@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.1.4.RELEASE</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+
+	<groupId>com.intellif</groupId>
+	<artifactId>shenzhen-static-import</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>shenzhen-static-import</name>
+	<description>Demo project for Spring Boot</description>
+
+	<properties>
+		<java.version>1.8</java.version>
+		<druid>1.0.31</druid>
+	</properties>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jdbc</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!--log4j2-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j2</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-pool2</artifactId>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.mchange/c3p0 -->
+		<dependency>
+			<groupId>com.mchange</groupId>
+			<artifactId>c3p0</artifactId>
+			<version>0.9.5.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<!-- intellif  -->
+	<build>
+		<finalName>shenzhen-import</finalName>
+		<plugins>
+			<!--增加了spring-boot-maven-plugin插件之后，打出来的api.jar是可直接运行的，api.jar直接包含了全部的依赖jar包
+            去掉这个插件的话，api.jar不能直接运行，此时api.jar只有自身的class文件，依赖lib下面的依赖包，
+            分模块开发的时候建议去掉插件，否则打包之后，lib下的子模块里面有mybatis的xml文件，api.jar里面也有，会冲突导致工程启动失败-->
+			<!--<plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<mainClass>com.intellif.ShenzhenStaticImportApplication</mainClass>
+							<classpathPrefix>lib</classpathPrefix>
+							<useUniqueVersions>false</useUniqueVersions>
+						</manifest>
+						<manifestEntries>
+							<Class-Path>lib/</Class-Path>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<!-- 在default生命周期的 validate阶段就执行resources插件的copy-resources目标 -->
+						<phase>validate</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<!-- 指定resources插件处理资源文件到哪个目录下 -->
+							<outputDirectory>${project.build.directory}/config</outputDirectory>
+							<!-- 也可以用下面这样的方式（指定相对url的方式指定outputDirectory） <outputDirectory>target/classes</outputDirectory> -->
+							<!-- 待处理的资源定义 -->
+							<encoding>utf-8</encoding>
+							<resources>
+								<resource>
+									<!-- 指定resources插件处理哪个目录下的资源文件 -->
+									<directory>./</directory>
+									<includes>
+										<include>application-*.properties</include>
+									</includes>
+
+									<!-- 指定不需要处理的资源 <excludes> <exclude>WEB-INF/*.*</exclude> </excludes> -->
+									<!-- 是否对待处理的资源开启过滤模式 (resources插件的copy-resources目标也有资源过滤的功能，这里配置的
+                                    这个功能的效果跟<build><resources><resource>下配置的资源过滤是一样的，只不过可能执行的阶段不一样， 这里执行的阶段是插件指定的validate阶段，<build><resources><resource>下的配置将是在resources插件的resources目标执行时起作用（在process-resources阶段）) -->
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<directory>./src/main/resources</directory>
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<directory>./src/main/resources/db</directory>
+									<includes>
+										<include>flyway.conf</include>
+									</includes>
+									<filtering>false</filtering>
+								</resource>
+
+								<resource>
+									<directory>src/myresources</directory>
+								</resource>
+							</resources>
+						</configuration>
+
+						<inherited>true</inherited>
+					</execution>
+
+					<execution>
+						<id>copy-resources1</id>
+						<!-- 在default生命周期的 validate阶段就执行resources插件的copy-resources目标 -->
+						<phase>validate</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<!-- 指定resources插件处理资源文件到哪个目录下 -->
+							<outputDirectory>${project.build.directory}/bin</outputDirectory>
+							<!-- 也可以用下面这样的方式（指定相对url的方式指定outputDirectory） <outputDirectory>target/classes</outputDirectory> -->
+							<!-- 待处理的资源定义 -->
+							<resources>
+								<resource>
+									<!-- 指定resources插件处理哪个目录下的资源文件 -->
+									<directory>./</directory>
+									<includes>
+										<include>start.sh</include>
+										<include>stop.sh</include>
+									</includes>
+									<!-- 指定不需要处理的资源 <excludes> <exclude>WEB-INF/*.*</exclude> </excludes> -->
+									<!-- 是否对待处理的资源开启过滤模式 (resources插件的copy-resources目标也有资源过滤的功能，这里配置的
+                                    这个功能的效果跟<build><resources><resource>下配置的资源过滤是一样的，只不过可能执行的阶段不一样， 这里执行的阶段是插件指定的validate阶段，<build><resources><resource>下的配置将是在resources插件的resources目标执行时起作用（在process-resources阶段）) -->
+									<filtering>false</filtering>
+								</resource>
+							</resources>
+						</configuration>
+
+						<inherited>true</inherited>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!--根据构建文件进行打包-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.6</version>
+				<!-- The configuration of the plugin -->
+				<configuration>
+					<descriptors>
+						<!-- 配置 assembly 的路径 -->
+						<descriptor>src/assembly/assembly.xml</descriptor>
+					</descriptors>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!--<plugin>-->
+			<!--<groupId>org.flywaydb</groupId>-->
+			<!--<artifactId>flyway-maven-plugin</artifactId>-->
+			<!--<version>4.0.3</version>-->
+			<!--</plugin>-->
+		</plugins>
+	</build>
+
+</project>
